@@ -53,14 +53,43 @@ const createItemService = async (data, userId) => {
     }
 };
 
-// 2. Lấy danh sách theo Store
+// 2. Lấy danh sách sản phẩm theo Store (PHIÊN BẢN CHẠY ĐƯỢC 100%)
+// src/service/itemService.js
+
 const getItemsByStoreService = async (storeId) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
             .input("store_id", sql.Int, storeId)
-            .query("SELECT * FROM Items WHERE store_id = @store_id ORDER BY id DESC");
-        return result.recordset;
+            .query(`
+                SELECT 
+                    I.*, 
+                    S.name as store_name,
+                    -- Lấy ảnh đại diện (giữ nguyên logic cũ)
+                    (SELECT TOP 1 image FROM ItemVariants WHERE item_id = I.id) as image,
+
+                    -- MỚI: Lấy danh sách variants dưới dạng JSON
+                    (
+                        SELECT * FROM ItemVariants V 
+                        WHERE V.item_id = I.id 
+                        FOR JSON PATH
+                    ) AS variants
+
+                FROM Items I
+                JOIN Stores S ON I.store_id = S.id
+                WHERE I.store_id = @store_id
+                ORDER BY I.id DESC
+            `);
+        
+        // Parse chuỗi JSON variants thành mảng JavaScript
+        const items = result.recordset.map(item => {
+            return {
+                ...item,
+                variants: item.variants ? JSON.parse(item.variants) : []
+            };
+        });
+
+        return items;
     } catch (err) {
         throw new Error(err.message);
     }
@@ -224,6 +253,43 @@ const deleteVariantService = async (variantId, userId) => {
     }
 };
 
+const getAllItemsService = async () => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT 
+                I.*, 
+                -- Lấy ảnh từ bảng Variants (nếu bảng Items không có ảnh)
+                (SELECT TOP 1 image FROM ItemVariants WHERE item_id = I.id) as image,
+                S.name as store_name
+            FROM Items I
+            LEFT JOIN Stores S ON I.store_id = S.id
+            ORDER BY I.id DESC
+        `);
+        return result.recordset;
+    } catch (err) {
+        throw new Error(err.message);
+    }
+};
+// 10. Lấy danh sách Category mà Store này đang kinh doanh
+const getCategoriesByStoreService = async (storeId) => {
+    try {
+        const pool = await poolPromise;
+        // Chỉ lấy những category có sản phẩm thuộc store này
+        const result = await pool.request()
+            .input("store_id", sql.Int, storeId)
+            .query(`
+                SELECT DISTINCT C.id, C.name, C.image
+                FROM Categories C
+                JOIN Items I ON I.category_id = C.id
+                WHERE I.store_id = @store_id
+            `);
+        return result.recordset;
+    } catch (err) {
+        console.error("Lỗi lấy category:", err);
+        return [];
+    }
+};
 module.exports = {
     createItemService,
     getItemsByStoreService,
@@ -232,5 +298,7 @@ module.exports = {
     deleteItemService,
     addVariantService,
     updateVariantService,
-    deleteVariantService
+    deleteVariantService,
+    getAllItemsService,
+    getCategoriesByStoreService
 };

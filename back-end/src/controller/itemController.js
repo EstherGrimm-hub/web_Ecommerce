@@ -100,12 +100,19 @@ module.exports = {
     },
     getAllItems: async (req, res) => {
         try {
-            const pool = await poolPromise;
-            // Join thêm bảng ItemImages để lấy ảnh đại diện nếu cần
-            const result = await pool.request().query("SELECT * FROM Items ORDER BY createdAt DESC");
-            res.json(result.recordset);
+            // Gọi qua Service chứ không gọi trực tiếp poolPromise nữa
+            const items = await itemService.getAllItemsService();
+            res.json(items);
         } catch (err) {
             res.status(500).json({ error: err.message });
+        }
+    },
+    getCategoriesByStore: async (req, res) => {
+        try {
+            const categories = await itemService.getCategoriesByStoreService(req.params.storeId);
+            return res.status(200).json(categories);
+        } catch (err) {
+            return res.status(500).json({ message: err.message });
         }
     },
 };

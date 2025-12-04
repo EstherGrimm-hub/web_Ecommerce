@@ -7,7 +7,7 @@ const { verifyToken, checkRole } = require('../middleware/verify_token');
 router.get("/", itemController.getAllItems); // GET /api/items -> Lấy tất cả
 router.get("/store/:storeId", itemController.getItemsByStore);
 router.get("/:id", itemController.getItemDetail);       
-
+router.get("/store/:storeId/categories", itemController.getCategoriesByStore);
 // Protected: Chỉ Seller mới được làm
 router.post("/", verifyToken, checkRole(['seller']), itemController.createItem);            
 router.put("/:id", verifyToken, checkRole(['seller']), itemController.updateItem);    

@@ -168,7 +168,7 @@ const ArticleDetail = () => {
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <Avatar 
                     size={80} 
-                    src={article.store_image || "https://via.placeholder.com/150"} 
+                    src={article.store_image || "https://placehold.co/150x150?text=Shop"} 
                     icon={<ShopOutlined />}
                     style={{ marginBottom: 10, border: '1px solid #ddd' }}
                 />
@@ -199,9 +199,13 @@ const ArticleDetail = () => {
                 >
                   <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
                     <img 
-                        alt="product" 
-                        src={article.item_image || "https://via.placeholder.com/100"} 
-                        style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #eee' }} 
+                      alt="product" 
+                      src={article.item_image ? article.item_image : "https://placehold.co/100x100?text=No+Product"} 
+                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #eee' }} 
+                      onError={(e) => { 
+                        e.target.onerror = null; 
+                        e.target.src="https://placehold.co/100x100?text=Error"; 
+                      }}
                     />
                     <div style={{ flex: 1 }}>
                         <Text strong style={{ display: 'block', marginBottom: 5, lineHeight: '1.2' }}>
