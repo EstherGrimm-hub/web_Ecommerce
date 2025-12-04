@@ -107,7 +107,7 @@ const AddProduct = () => {
             <Input.TextArea rows={4} />
           </Form.Item>
 
-          <Form.Item label="Link Hình ảnh (URL)" name="image"> 
+          <Form.Item label="Link Hình ảnh" name="image"> 
              <Input />
           </Form.Item>
 

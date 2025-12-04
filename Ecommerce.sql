@@ -108,40 +108,116 @@ CREATE TABLE OrderItems (
 );
 CREATE TABLE Vouchers (
     id INT IDENTITY PRIMARY KEY,
-    code NVARCHAR(50) NOT NULL UNIQUE, -- mã voucher VD: SALE10
+
+    -- Nếu NULL = voucher toàn hệ thống (admin tạo)
+    -- Nếu có store_id = voucher của cửa hàng
+    store_id INT NULL,
+
+    code NVARCHAR(50) NOT NULL UNIQUE,
     description NVARCHAR(255),
 
     discount_type NVARCHAR(10) NOT NULL CHECK (discount_type IN ('percent', 'fixed')),
-    discount_value DECIMAL(18,2) NOT NULL, -- nếu % thì nhập 10 -> 10%
+    discount_value DECIMAL(18,2) NOT NULL,
 
-    min_order_value DECIMAL(18,2) DEFAULT 0,  -- đơn tối thiểu
+    min_order_value DECIMAL(18,2) DEFAULT 0,
 
-    quantity INT DEFAULT 1,  -- số lần sử dụng còn lại
-    max_uses_per_user INT DEFAULT 1,  -- mỗi user chỉ dùng 1 lần
+    quantity INT DEFAULT 1,             -- tổng lượt sử dụng còn lại
+    max_uses_per_user INT DEFAULT 1,    -- mỗi user dùng tối đa bao nhiêu lần
 
     start_date DATETIME DEFAULT GETDATE(),
     end_date DATETIME NOT NULL,
 
     createdAt DATETIME DEFAULT GETDATE(),
-    updatedAt DATETIME DEFAULT GETDATE()
+    updatedAt DATETIME DEFAULT GETDATE(),
+
+    FOREIGN KEY (store_id) REFERENCES Stores(id)
 );
+
 CREATE TABLE OrderVouchers (
     id INT IDENTITY PRIMARY KEY,
     order_id INT NOT NULL,
     voucher_id INT NOT NULL,
-    discount_amount DECIMAL(18,2) NOT NULL, -- số tiền giảm thực tế
+    discount_amount DECIMAL(18,2) NOT NULL,
 
     createdAt DATETIME DEFAULT GETDATE(),
 
     FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE CASCADE,
     FOREIGN KEY (voucher_id) REFERENCES Vouchers(id)
 );
- 
 
- -- 1. Tạo 1 user đóng vai trò người bán
-INSERT INTO Users (name, email, password, role) 
-VALUES ('Seller One', 'seller@test.com', 'hashedpassword', 'seller');
 
--- 2. Lấy ID của user vừa tạo để tạo Store (Giả sử ID user là 1)
-INSERT INTO Stores (name, description, owner_id) 
-VALUES ('Tech Store', 'Ban do cong nghe', 1);
+CREATE TABLE UserVouchers (
+    id INT IDENTITY PRIMARY KEY,
+    user_id INT NOT NULL,
+    voucher_id INT NOT NULL,
+
+    max_uses INT DEFAULT 1,      -- user được dùng tối đa bao nhiêu lần
+    used_count INT DEFAULT 0,    -- đã dùng bao nhiêu lần
+
+    createdAt DATETIME DEFAULT GETDATE(),
+
+    FOREIGN KEY (user_id) REFERENCES Users(id),
+    FOREIGN KEY (voucher_id) REFERENCES Vouchers(id)
+);
+
+-- 1. Thêm các cột vào Vouchers nếu chưa có
+IF COL_LENGTH('dbo.Vouchers','store_id') IS NULL
+BEGIN
+    ALTER TABLE Vouchers ADD store_id INT NULL;
+END
+IF COL_LENGTH('dbo.Vouchers','applies_to_all_users') IS NULL
+BEGIN
+    ALTER TABLE Vouchers ADD applies_to_all_users BIT DEFAULT 1;
+END
+GO
+
+-- 2. Thêm FK store -> Vouchers (nếu chưa có)
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys fk
+    JOIN sys.objects o ON fk.parent_object_id = o.object_id
+    WHERE o.name = 'Vouchers' AND fk.name = 'FK_Vouchers_Stores'
+)
+BEGIN
+    ALTER TABLE Vouchers
+    ADD CONSTRAINT FK_Vouchers_Stores FOREIGN KEY (store_id) REFERENCES Stores(id);
+END
+GO
+
+-- 3. Tạo bảng UserVouchers (nếu chưa)
+IF OBJECT_ID('dbo.UserVouchers','U') IS NULL
+BEGIN
+    CREATE TABLE UserVouchers (
+        id INT IDENTITY PRIMARY KEY,
+        user_id INT NOT NULL,
+        voucher_id INT NOT NULL,
+        max_uses INT DEFAULT 1,
+        used_count INT DEFAULT 0,
+        createdAt DATETIME DEFAULT GETDATE(),
+        CONSTRAINT FK_UserVouchers_Users FOREIGN KEY (user_id) REFERENCES Users(id),
+        CONSTRAINT FK_UserVouchers_Vouchers FOREIGN KEY (voucher_id) REFERENCES Vouchers(id)
+    );
+    CREATE UNIQUE INDEX UQ_UserVouchers_User_Voucher ON UserVouchers(user_id, voucher_id);
+END
+GO
+
+-- 4. Đảm bảo OrderVouchers tồn tại (nếu chưa)
+IF OBJECT_ID('dbo.OrderVouchers','U') IS NULL
+BEGIN
+    CREATE TABLE OrderVouchers (
+        id INT IDENTITY PRIMARY KEY,
+        order_id INT NOT NULL,
+        voucher_id INT NOT NULL,
+        discount_amount DECIMAL(18,2) NOT NULL,
+        createdAt DATETIME DEFAULT GETDATE(),
+        CONSTRAINT FK_OrderVouchers_Orders FOREIGN KEY (order_id) REFERENCES Orders(id) ON DELETE CASCADE,
+        CONSTRAINT FK_OrderVouchers_Vouchers FOREIGN KEY (voucher_id) REFERENCES Vouchers(id)
+    );
+END
+GO
+
+-- 5. Index hỗ trợ tìm voucher theo code nhanh
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Vouchers_code')
+BEGIN
+    CREATE UNIQUE INDEX IX_Vouchers_code ON Vouchers(code);
+END
+GO

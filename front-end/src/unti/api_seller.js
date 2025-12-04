@@ -24,37 +24,50 @@ const deleteItemApi = (itemId) => {
   const URL = `/api/items/${itemId}`;
   return instance.delete(URL);
 };
+
 // Thêm hàm lấy chi tiết Item cho Seller
 const getItemDetailApi = (id) => {
   return instance.get(`/api/items/${id}`);
 }
 
+// ============ VARIANTS (ĐÃ SỬA LỖI DUPLICATE EXPORT) ============
+// 1. Thêm biến thể mới (Bỏ chữ 'export' ở đây)
+const addVariantApi = (data) => {
+    return instance.post("/api/items/variant", data);
+};
+
+// 2. Cập nhật biến thể (Bỏ chữ 'export' ở đây)
+const updateVariantApi = (id, data) => {
+    return instance.put(`/api/items/variant/${id}`, data);
+};
+
+// 3. Xóa biến thể (Bỏ chữ 'export' ở đây)
+const deleteVariantApi = (id) => {
+    return instance.delete(`/api/items/variant/${id}`);
+};
+
 // ================= CATEGORIES =================
 
 // GET categories by store
 const getCategoriesByStoreApi = (storeId) => {
-  // Backend route: GET /api/categories/store/:storeId
   const URL = `/api/categories/store/${storeId}`; 
   return instance.get(URL);
 }
 
 // CREATE category
 const createCategoryApi = (data) => {  
-  // Backend route: POST /api/categories
   const URL = `/api/categories`;
   return instance.post(URL, data); 
 }
 
 // UPDATE category
 const updateCategoryApi = (id, data) => {
-  // Backend route: PUT /api/categories/:id
   const URL = `/api/categories/${id}`;
   return instance.put(URL, data);
 }
 
 // DELETE category
 const deleteCategoryApi = (id) => {
-  // Backend route: DELETE /api/categories/:id
   const URL = `/api/categories/${id}`;
   return instance.delete(URL);
 }
@@ -81,28 +94,42 @@ const createArticleApi = (data) => {
 const deleteArticleApi = (id) => {
   return instance.delete(`/api/articles/${id}`);
 }
-// Thêm hàm lấy chi tiết Article cho Seller
+
 const getArticleDetailApi = (id) => {
   return instance.get(`/api/articles/${id}`);
 }
+
 const updateArticleApi = (id, data) => {
   return instance.put(`/api/articles/${id}`, data);
 }
+
+// Xuất khẩu chung ở cuối file
 export {
   getItemsByStoreApi,
   createItemApi,
   updateItemApi,
   deleteItemApi,
+  getItemDetailApi,
+  
+  // Variants (Đã khai báo bên trên, giờ export ở đây là đúng chuẩn)
+  addVariantApi,
+  updateVariantApi,
+  deleteVariantApi,
+
+  // Categories
   getCategoriesByStoreApi,
   createCategoryApi,
   updateCategoryApi,
   deleteCategoryApi,
+
+  // Orders
   getOrdersByStoreApi,
   updateOrderStatusApi,
+
+  // Articles
   getArticlesByStoreApi, 
   createArticleApi, 
   deleteArticleApi,
-  getItemDetailApi, 
   getArticleDetailApi,
   updateArticleApi
 };

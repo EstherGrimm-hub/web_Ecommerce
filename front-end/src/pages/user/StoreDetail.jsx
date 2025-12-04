@@ -1,9 +1,9 @@
-// src/pages/user/StoreDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Row, Col, Typography, Spin, Button, Empty, Avatar, Tabs } from "antd"; // Thêm Tabs
-import { ArrowLeftOutlined, ShopOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Typography, Spin, Button, Empty, Avatar, Tabs } from "antd";
+import { ArrowLeftOutlined, ShopOutlined, EnvironmentOutlined, ShoppingCartOutlined } from "@ant-design/icons"; // Thêm ShoppingCartOutlined
 import axios from "../../unti/axios.cusomize.js"; 
+import { addToCart } from "../../unti/cart"; // <--- IMPORT HÀM CART
 
 const { Title, Text } = Typography;
 const { Meta } = Card;
@@ -12,9 +12,9 @@ const StoreDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  const [allItems, setAllItems] = useState([]); // Lưu tất cả sản phẩm
-  const [displayItems, setDisplayItems] = useState([]); // Lưu sản phẩm đang hiển thị (theo filter)
-  const [categories, setCategories] = useState([]); // Lưu danh mục
+  const [allItems, setAllItems] = useState([]);
+  const [displayItems, setDisplayItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [storeInfo, setStoreInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,15 +25,11 @@ const StoreDetail = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // 1. Gọi API lấy Sản phẩm
       const resItems = await axios.get(`/api/items/store/${id}`);
-      console.log("Check API Items:", resItems); // <--- BẬT F12 XEM LOG NÀY
-
+      
       let itemsData = [];
       if (Array.isArray(resItems)) {
           itemsData = resItems;
-          // Lấy info shop từ item đầu tiên nếu có
           if (resItems.length > 0) {
               setStoreInfo({
                   name: resItems[0].store_name,
@@ -42,22 +38,19 @@ const StoreDetail = () => {
               });
           }
       } else if (resItems && resItems.data) {
-          // Trường hợp axios chưa interceptor, dữ liệu nằm trong .data
           itemsData = resItems.data;
       }
 
       setAllItems(itemsData);
-      setDisplayItems(itemsData); // Mặc định hiển thị tất cả
+      setDisplayItems(itemsData);
 
-      // 2. Gọi API lấy Danh mục (Vừa tạo ở bước 1)
       try {
           const resCats = await axios.get(`/api/items/store/${id}/categories`);
           if (Array.isArray(resCats)) {
-              // Thêm mục "Tất cả" vào đầu
               setCategories([{ id: 'all', name: 'Tất cả' }, ...resCats]);
           }
       } catch (err) {
-          console.warn("Chưa lấy được danh mục hoặc chưa có API category", err);
+          console.warn("Chưa lấy được danh mục", err);
       }
 
     } catch (error) {
@@ -67,12 +60,10 @@ const StoreDetail = () => {
     }
   };
 
-  // Xử lý khi bấm vào Tab Category
   const handleTabChange = (key) => {
       if (key === 'all') {
           setDisplayItems(allItems);
       } else {
-          // Lọc sản phẩm theo category_id
           const filtered = allItems.filter(item => item.category_id === parseInt(key));
           setDisplayItems(filtered);
       }
@@ -95,7 +86,7 @@ const StoreDetail = () => {
         </div>
       </Card>
 
-      {/* 2. THANH DANH MỤC (TABS) */}
+      {/* 2. THANH DANH MỤC */}
       <div style={{ background: '#fff', padding: '0 20px', borderRadius: 8, marginBottom: 20 }}>
           <Tabs 
             defaultActiveKey="all" 
@@ -117,13 +108,13 @@ const StoreDetail = () => {
               <Col xs={24} sm={12} md={8} lg={6} key={item.id}>
                 <Card
                   hoverable
+                  // Logic click Card để xem chi tiết
                   onClick={() => navigate(`/product/${item.id}`)}
                   cover={
                     <img 
                         alt={item.name} 
                         src={item.image ? item.image : "https://placehold.co/200x200?text=No+Image"} 
                         style={{ height: 200, objectFit: "cover" }}
-  
                         onError={(e) => { 
                             e.target.onerror = null; 
                             e.target.src="https://placehold.co/200x200?text=Error"; 
@@ -134,9 +125,24 @@ const StoreDetail = () => {
                   <Meta 
                     title={item.name} 
                     description={
-                        <Text type="danger" strong>
-                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price || 0)}
-                        </Text>
+                        <div>
+                            <Text type="danger" strong style={{ display: 'block', marginBottom: 10 }}>
+                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price || 0)}
+                            </Text>
+                            
+                            {/* --- NÚT THÊM VÀO GIỎ --- */}
+                            <Button 
+                                type="primary"
+                                icon={<ShoppingCartOutlined />}
+                                block // Nút full chiều rộng
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Quan trọng: Chặn không cho nhảy trang
+                                    addToCart(item);     // Gọi hàm thêm vào giỏ
+                                }}
+                            >
+                                Thêm vào giỏ
+                            </Button>
+                        </div>
                     } 
                   />
                 </Card>
