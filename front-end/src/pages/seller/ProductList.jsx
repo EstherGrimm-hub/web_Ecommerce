@@ -5,16 +5,11 @@ import { EditOutlined, DeleteOutlined, AppstoreAddOutlined } from "@ant-design/i
 import { useNavigate } from "react-router-dom";
 import { getItemsByStoreApi, deleteItemApi } from "../../unti/api_seller";
 
-// Import Component Modal quản lý biến thể (Đảm bảo bạn đã tạo file này ở bước trước)
-import VariantManager from "./VariantManager";
-
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // --- STATE CHO MODAL BIẾN THỂ ---
-  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  // Variant modal removed; variants managed via itemVariant backend endpoints
 
   const navigate = useNavigate();
   const store = JSON.parse(localStorage.getItem("store"));
@@ -53,10 +48,9 @@ const ProductList = () => {
     }
   };
 
-  // --- HÀM MỞ MODAL BIẾN THỂ ---
+  // Navigate to variant management page (handled by new itemVariant routes)
   const openVariantModal = (product) => {
-      setSelectedProduct(product);
-      setIsVariantModalOpen(true);
+    if (product && product.id) navigate(`/Seller/products/${product.id}/variants`);
   };
 
   const columns = [
@@ -92,15 +86,15 @@ const ProductList = () => {
             </Tooltip>
 
             {/* Nút Quản lý Biến thể (Mới tích hợp) */}
-            <Tooltip title="Quản lý Size/Màu">
-                <Button 
-                    type="default"
-                    style={{ borderColor: '#faad14', color: '#faad14' }}
-                    icon={<AppstoreAddOutlined />} 
-                    size="small"
-                    onClick={() => openVariantModal(record)}
-                />
-            </Tooltip>
+          <Tooltip title="Quản lý Size/Màu">
+            <Button 
+              type="default"
+              style={{ borderColor: '#faad14', color: '#faad14' }}
+              icon={<AppstoreAddOutlined />} 
+              size="small"
+              onClick={() => openVariantModal(record)}
+            />
+          </Tooltip>
 
             {/* Nút Xóa */}
             <Popconfirm 
@@ -155,13 +149,7 @@ const ProductList = () => {
         }}
       />
 
-      {/* --- MODAL QUẢN LÝ BIẾN THỂ --- */}
-      <VariantManager 
-        visible={isVariantModalOpen}
-        product={selectedProduct}
-        onClose={() => setIsVariantModalOpen(false)}
-        onRefresh={fetchProducts} // Refresh lại bảng sau khi thêm/xóa biến thể xong
-      />
+      {/* VariantManager removed — variant management moved to backend itemVariant routes */}
     </div>
   );
 };

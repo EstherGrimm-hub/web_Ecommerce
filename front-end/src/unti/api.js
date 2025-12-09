@@ -53,6 +53,20 @@ const getAllCategoriesApi = () => {
     return instance.get('/api/categories');
 }
 
+// User Order APIs
+const getUserOrderHistoryApi = () => {
+    return instance.get('/api/orders/user/history');
+}
+
+const getOrderDetailApi = (orderId) => {
+    return instance.get(`/api/orders/${orderId}`);
+}
+
+const cancelOrderApi = (orderId) => {
+    return instance.post(`/api/orders/${orderId}/cancel`);
+}
+
 export {createUserApi,LoginApi,getUserApi,getSellerApi,getcheckStoreApi,
-    getAllArticlesApi, getArticleDetailApi, likeArticleApi, getAllProductsApi, getAllCategoriesApi
+    getAllArticlesApi, getArticleDetailApi, likeArticleApi, getAllProductsApi, getAllCategoriesApi,
+    getUserOrderHistoryApi, getOrderDetailApi, cancelOrderApi
 }

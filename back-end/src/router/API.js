@@ -74,6 +74,7 @@ routerAPI.get('/search', searchItems);
 
 routerAPI.use("/items", require("./item.routes"));
 routerAPI.use("/categories", require("./category.routes"));
+routerAPI.use("/item-variants", require("./itemVariant.routes"));
 
 routerAPI.use("/articles", require("./article.routes"));
 routerAPI.use("/stores", require("./store.routes"));

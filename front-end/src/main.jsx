@@ -13,9 +13,11 @@ import UserPage from './pages/user/User.jsx';
 import RegisterPage from './pages/user/Register.jsx';
 import LoginPage from './pages/user/Login.jsx';
 import CartPage from './pages/user/CartPage.jsx';
+import OrderHistory from './pages/user/OrderHistory.jsx';
 import BlogPage from './pages/user/BlogPage.jsx';
 import ArticleDetail from './pages/user/ArticleDetail.jsx';
 import UserStoreDetail from './pages/user/StoreDetail.jsx';
+import ProductDetail from './pages/user/ProductDetail.jsx';
 // Admin Pages
 import Admin from './pages/admin/Admin.jsx';
 import Admin_Dashboard from './pages/admin/Admin_DashBoard.jsx';
@@ -32,6 +34,7 @@ import RegisterStore from './pages/seller/StoreRegister.jsx';
 import StorePage from './pages/seller/StorePage.jsx';
 import ProductList from './pages/seller/ProductList.jsx'; 
 import AddProduct from './pages/seller/AddProduct.jsx';
+import VariantPage from './pages/seller/VariantPage.jsx';
 import OrderList from './pages/seller/OrderList.jsx';
 import Dashboard from './pages/seller/Dashboard.jsx';
 import ArticleList from './pages/seller/ArticleList.jsx';
@@ -45,8 +48,10 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: '', element: <HomePage /> },
+      { path: 'product/:id', element: <ProductDetail /> },
       { path: 'user', element: <UserPage /> },
       { path: 'cart', element: <CartPage /> },
+      { path: 'orders', element: <OrderHistory /> },
       { path: 'blog', element: <BlogPage /> },
       { path: 'blog/:id', element: <ArticleDetail /> },
       { path: 'store/:id', element: <UserStoreDetail /> }
@@ -92,6 +97,7 @@ const router = createBrowserRouter([
       { path: 'products', element: <ProductList /> },
       { path: 'products/create', element: <AddProduct /> },
       { path: 'products/edit/:id', element: <AddProduct /> },
+      { path: 'products/:id/variants', element: <VariantPage /> },
       { path: 'registerStore', element: <RegisterStore /> },
       { path: 'orders', element: <OrderList /> },
       { path: 'articles', element: <ArticleList /> },

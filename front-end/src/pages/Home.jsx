@@ -1,12 +1,13 @@
 // src/pages/user/HomePage.jsx
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Button, Spin, message, Tabs } from "antd";
-import { ShoppingCartOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Typography, Button, Spin, message, Tabs, Space } from "antd";
+import { ShoppingCartOutlined, OrderedListOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom"; 
 import { getAllProductsApi, getAllCategoriesApi } from "../unti/api";
+import { addToCart } from "../unti/cart";
+import ProductVariantModal from "../component/ProductVariantModal";
 
-// 1. Import Modal
-import ProductVariantModal from "../component/ProductVariantModal"; 
+// Product variant modal removed — now handled by backend itemVariant endpoints
 
 const { Meta } = Card;
 const { Title } = Typography;
@@ -19,9 +20,7 @@ const HomePage = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [userRole, setUserRole] = useState(null);
   
-  // 2. State cho Modal
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  // Modal removed; product variant selection handled via backend endpoints
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,19 +57,34 @@ const HomePage = () => {
     else setFilteredProducts(products.filter(p => p.category_id === parseInt(key)));
   };
 
-  // 3. Hàm mở Modal
+  // Add to cart: if product has variants, open modal to choose variant; otherwise add directly
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
   const openAddToCartModal = (product) => {
-      setSelectedProduct(product);
-      setIsModalVisible(true);
+    if (!product) return;
+    // Always open modal; it will fetch full details and display variants if they exist
+    // Modal handles both: products with variants (user chooses) and without (direct add option)
+    setSelectedProduct(product);
+    setIsModalVisible(true);
   };
 
   const itemsTab = [{ key: "all", label: "Tất cả" }, ...categories.map(c => ({ key: String(c.id), label: c.name }))];
 
   return (
     <div style={{ padding: "20px 50px", background: "#f0f2f5", minHeight: "100vh" }}>
-      <div style={{ background: 'linear-gradient(90deg, #1677ff 0%, #00b96b 100%)', height: 200, borderRadius: 8, marginBottom: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexDirection: 'column' }}>
-        <h1>Siêu Sale Tháng 12 - Giảm giá đến 50%</h1>
-        {userRole && <p style={{marginTop: 10, fontSize: 16}}>Chào mừng bạn quay trở lại!</p>}
+      <div style={{ background: 'linear-gradient(90deg, #1677ff 0%, #00b96b 100%)', height: 200, borderRadius: 8, marginBottom: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 40, paddingRight: 40, color: '#fff', flexDirection: 'row' }}>
+        <div style={{ flex: 1 }}>
+          <h1>Siêu Sale Tháng 12 - Giảm giá đến 50%</h1>
+          {userRole && <p style={{marginTop: 10, fontSize: 16}}>Chào mừng bạn quay trở lại!</p>}
+        </div>
+        {userRole && (
+          <Space direction="vertical" align="end">
+            <Button type="primary" ghost icon={<OrderedListOutlined />} onClick={() => navigate('/orders')} size="large">
+              Lịch sử đơn hàng
+            </Button>
+          </Space>
+        )}
       </div>
 
       <div style={{ background: '#fff', padding: '10px 20px', borderRadius: 8, marginBottom: 20 }}>
@@ -121,7 +135,6 @@ const HomePage = () => {
         </Row>
       )}
 
-      {/* 5. Nhúng Modal */}
       <ProductVariantModal 
         visible={isModalVisible}
         product={selectedProduct}

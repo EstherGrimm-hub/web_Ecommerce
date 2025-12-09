@@ -10,7 +10,8 @@ export const getCart = () => {
 
 export const saveCart = (cart) => {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  window.dispatchEvent(new Event("storage"));
+  // Notify app about cart changes
+  window.dispatchEvent(new Event("storageUpdate"));
 };
 
 // 3. Thêm sản phẩm (ĐÃ NÂNG CẤP check variant_id)
@@ -68,5 +69,5 @@ export const removeFromCart = (productId, variantId) => {
 
 export const clearCart = () => {
   localStorage.removeItem(CART_KEY);
-  window.dispatchEvent(new Event("storage"));
+  window.dispatchEvent(new Event("storageUpdate"));
 };

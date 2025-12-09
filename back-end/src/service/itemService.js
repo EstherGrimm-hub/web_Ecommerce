@@ -261,12 +261,27 @@ const getAllItemsService = async () => {
                 I.*, 
                 -- Lấy ảnh từ bảng Variants (nếu bảng Items không có ảnh)
                 (SELECT TOP 1 image FROM ItemVariants WHERE item_id = I.id) as image,
-                S.name as store_name
+                S.name as store_name,
+                -- Lấy danh sách variants dưới dạng JSON
+                (
+                    SELECT * FROM ItemVariants V 
+                    WHERE V.item_id = I.id 
+                    FOR JSON PATH
+                ) AS variants
             FROM Items I
             LEFT JOIN Stores S ON I.store_id = S.id
             ORDER BY I.id DESC
         `);
-        return result.recordset;
+        
+        // Parse chuỗi JSON variants thành mảng JavaScript
+        const items = result.recordset.map(item => {
+            return {
+                ...item,
+                variants: item.variants ? JSON.parse(item.variants) : []
+            };
+        });
+        
+        return items;
     } catch (err) {
         throw new Error(err.message);
     }

@@ -10,12 +10,14 @@ import {
 } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import HeaderSearch from "./search.jsx";
+import { getCart } from "../unti/cart";
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(location.pathname);
   const [userRole, setUserRole] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
 
   // ======================
   // 1. CHECK LOGIN
@@ -38,10 +40,25 @@ const Header = () => {
     };
 
     checkLogin();
+    checkCartCount();
     window.addEventListener("storageUpdate", checkLogin);
+    window.addEventListener("storageUpdate", checkCartCount);
 
-    return () => window.removeEventListener("storageUpdate", checkLogin);
+    return () => {
+      window.removeEventListener("storageUpdate", checkLogin);
+      window.removeEventListener("storageUpdate", checkCartCount);
+    };
   }, [location]);
+
+  const checkCartCount = () => {
+    try {
+      const cart = getCart();
+      const qty = Array.isArray(cart) ? cart.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
+      setCartCount(qty);
+    } catch (err) {
+      setCartCount(0);
+    }
+  };
 
   // ======================
   // 2. LOGOUT
@@ -93,6 +110,7 @@ const Header = () => {
   // User đã login
   const userItems = [
     { label: <Link to="/blog">Blog</Link>, key: "blog", icon: <ReadOutlined /> },
+    { label: <Link to="/orders">Lịch sử đơn hàng</Link>, key: "orders", icon: <ShoppingCartOutlined /> },
 
     {
       label: <span onClick={logout}>Sign Out</span>,
@@ -146,7 +164,7 @@ const Header = () => {
             color: "inherit",
           }}
         >
-          <Badge count={0} size="small" showZero>
+          <Badge count={cartCount} size="small" showZero>
             <ShoppingCartOutlined style={{ fontSize: "22px", color: "#555" }} />
           </Badge>
         </Link>
