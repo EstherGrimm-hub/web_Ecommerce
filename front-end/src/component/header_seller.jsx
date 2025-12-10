@@ -11,9 +11,9 @@ export default function SellerHeader() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = JSON.parse(
-      localStorage.getItem("user") || sessionStorage.getItem("user")
-    );
+    const storedUser =
+      JSON.parse(localStorage.getItem("user")) ||
+      JSON.parse(sessionStorage.getItem("user"));
     setUser(storedUser);
 
     if (storedUser?.role === "seller") {

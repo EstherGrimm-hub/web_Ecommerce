@@ -3,11 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import 'antd/dist/reset.css';
 
-// Components & Layout
 import App from './App.jsx';
 import ProtectedRoute from './component/ProtectedRoute.jsx';
 
-// User Pages
 import HomePage from './pages/Home.jsx';
 import UserPage from './pages/user/User.jsx';
 import RegisterPage from './pages/user/Register.jsx';
@@ -18,7 +16,8 @@ import BlogPage from './pages/user/BlogPage.jsx';
 import ArticleDetail from './pages/user/ArticleDetail.jsx';
 import UserStoreDetail from './pages/user/StoreDetail.jsx';
 import ProductDetail from './pages/user/ProductDetail.jsx';
-// Admin Pages
+import SearchPage from './pages/SearchPage.jsx';
+
 import Admin from './pages/admin/Admin.jsx';
 import Admin_Dashboard from './pages/admin/Admin_DashBoard.jsx';
 import GetAllUsers from './pages/admin/getalluser.jsx';
@@ -28,11 +27,10 @@ import GetAllOrders from './pages/admin/getAllOrders.jsx';
 import GetAllItems from './pages/admin/getAllItems.jsx';
 import GetAllStores from './pages/admin/getAllStores.jsx';
 
-// Seller Pages
 import Seller from './pages/seller/Seller.jsx';
 import RegisterStore from './pages/seller/StoreRegister.jsx';
 import StorePage from './pages/seller/StorePage.jsx';
-import ProductList from './pages/seller/ProductList.jsx'; 
+import ProductList from './pages/seller/ProductList.jsx';
 import AddProduct from './pages/seller/AddProduct.jsx';
 import VariantPage from './pages/seller/VariantPage.jsx';
 import OrderList from './pages/seller/OrderList.jsx';
@@ -41,8 +39,6 @@ import ArticleList from './pages/seller/ArticleList.jsx';
 import AddArticle from './pages/seller/AddArticle.jsx';
 
 const router = createBrowserRouter([
-
-  // ====================== Public / User Routes ======================
   {
     path: '/',
     element: <App />,
@@ -54,15 +50,14 @@ const router = createBrowserRouter([
       { path: 'orders', element: <OrderHistory /> },
       { path: 'blog', element: <BlogPage /> },
       { path: 'blog/:id', element: <ArticleDetail /> },
-      { path: 'store/:id', element: <UserStoreDetail /> }
+      { path: 'store/:id', element: <UserStoreDetail /> },
+      { path: 'search', element: <SearchPage /> }
     ]
   },
 
-  // ====================== Auth Routes ======================
   { path: '/register', element: <RegisterPage /> },
   { path: '/login', element: <LoginPage /> },
 
-  // ====================== Admin Routes (Protected) ======================
   {
     path: '/Admin',
     element: (
@@ -82,7 +77,6 @@ const router = createBrowserRouter([
     ]
   },
 
-  // ====================== Seller Routes (Protected) ======================
   {
     path: '/Seller',
     element: (

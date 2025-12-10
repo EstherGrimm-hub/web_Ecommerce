@@ -170,7 +170,13 @@ const CartPage = () => {
         <Row gutter={24}>
             <Col xs={24} lg={16}>
                 <Card style={{ borderRadius: 8 }}>
-                    <Table dataSource={cartItems} columns={columns} rowKey={(r) => r.variant_id ? `${r.id}-${r.variant_id}` : r.id} pagination={false} />
+                    <Table
+                      dataSource={cartItems}
+                      columns={columns}
+                      // Ensure a stable unique key: include variant_id normalized to string
+                      rowKey={(r) => `${r.id}-${r.variant_id ?? 'none'}`}
+                      pagination={false}
+                    />
                 </Card>
             </Col>
             <Col xs={24} lg={8}>

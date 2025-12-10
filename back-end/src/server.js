@@ -15,8 +15,8 @@ const { syncItems } = require('./service/elastic_Query');
 const START_SERVER = ()=>{
     const app = express()
 
-    const HOST = process.env.HOST || 'localhost'
-    const PORT =process.env.PORT   || 8080
+    const HOST = process.env.HOST 
+    const PORT =process.env.PORT   
 
     app.use(cors())
     configViewsEngine(app) 
@@ -36,12 +36,8 @@ console.log("\n1.Connected to Sql Server\n")
 
 poolPromise.then(async () => {
     console.log("\n2. Connected to SQL Database");
-        
     await createIndex();
-
-
     await syncItems();
-
     START_SERVER();
 }).catch(err => {
     console.log("Failed to connect to DB:", err);

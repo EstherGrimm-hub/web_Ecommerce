@@ -1,70 +1,21 @@
 const { poolPromise, sql } = require("../config/Sql");
 
-// 1. Tạo đơn hàng (PHIÊN BẢN AN TOÀN & BẢO MẬT)
-const createOrderService = async (userId, itemsPayload) => {
+
+const createOrderService = async (userId, items) => {
+ 
+    let total_amount = 0;
+    items.forEach(item => {
+        total_amount += item.price * item.quantity;
+    });
+    let final_amount = total_amount; 
+
     const pool = await poolPromise;
     const transaction = new sql.Transaction(pool);
     
     try {
         await transaction.begin();
 
-        // BƯỚC 1: Validate dữ liệu & Tính tổng tiền từ Database (KHÔNG TIN FRONTEND)
-        let total_amount = 0;
-        const validItems = [];
-
-        for (const item of itemsPayload) {
-            // Lấy thông tin giá và tồn kho thực tế từ DB
-            let dbItem;
-            
-            if (item.variant_id) {
-                // Trường hợp mua Biến thể (Size/Màu)
-                const res = await new sql.Request(transaction)
-                    .input("item_id", sql.Int, item.item_id)
-                    .input("variant_id", sql.Int, item.variant_id)
-                    .query(`
-                        SELECT i.price, i.name, v.stock 
-                        FROM Items i
-                        JOIN ItemVariants v ON i.id = v.item_id
-                        WHERE i.id = @item_id AND v.id = @variant_id
-                    `);
-                dbItem = res.recordset[0];
-            } else {
-                // Trường hợp mua Sản phẩm thường (Không biến thể)
-                const res = await new sql.Request(transaction)
-                    .input("item_id", sql.Int, item.item_id)
-                    .query(`
-                        SELECT price, name, stock 
-                        FROM Items 
-                        WHERE id = @item_id
-                    `);
-                dbItem = res.recordset[0];
-            }
-
-            // Kiểm tra sản phẩm có tồn tại không
-            if (!dbItem) {
-                throw new Error(`Sản phẩm ID ${item.item_id} (Variant: ${item.variant_id}) không tồn tại`);
-            }
-
-            // KIỂM TRA TỒN KHO
-            if (dbItem.stock < item.quantity) {
-                throw new Error(`Sản phẩm "${dbItem.name}" không đủ hàng (Còn: ${dbItem.stock})`);
-            }
-
-            // Tính tiền bằng giá trong DB (An toàn tuyệt đối)
-            const lineTotal = dbItem.price * item.quantity;
-            total_amount += lineTotal;
-
-            // Lưu vào danh sách sạch để lát insert
-            validItems.push({
-                ...item,
-                price: dbItem.price, // Ghi đè giá từ DB vào
-                subtotal: lineTotal
-            });
-        }
-
-        const final_amount = total_amount; // Nếu có logic voucher thì tính thêm ở đây
-
-        // BƯỚC 2: Tạo Order
+     
         const orderRequest = new sql.Request(transaction);
         const orderResult = await orderRequest
             .input("user_id", sql.Int, userId)
@@ -78,8 +29,8 @@ const createOrderService = async (userId, itemsPayload) => {
         
         const newOrderId = orderResult.recordset[0].id;
 
-        // BƯỚC 3: Tạo OrderItems & Trừ kho
-        for (const item of validItems) {
+
+        for (const item of items) {
             const itemRequest = new sql.Request(transaction);
             await itemRequest
                 .input("order_id", sql.Int, newOrderId)
@@ -87,21 +38,11 @@ const createOrderService = async (userId, itemsPayload) => {
                 .input("variant_id", sql.Int, item.variant_id || null)
                 .input("quantity", sql.Int, item.quantity)
                 .input("price", sql.Decimal(18, 2), item.price)
-                .input("subtotal", sql.Decimal(18, 2), item.subtotal)
+                .input("subtotal", sql.Decimal(18, 2), item.price * item.quantity)
                 .query(`
-                    -- Lưu chi tiết đơn
                     INSERT INTO OrderItems (order_id, item_id, variant_id, quantity, price, subtotal)
                     VALUES (@order_id, @item_id, @variant_id, @quantity, @price, @subtotal);
-
-                    -- Trừ kho (Logic: Nếu có variant thì trừ variant, không thì trừ item gốc)
-                    IF @variant_id IS NOT NULL
-                    BEGIN
-                        UPDATE ItemVariants SET stock = stock - @quantity WHERE id = @variant_id;
-                    END
-                    ELSE
-                    BEGIN
-                        UPDATE Items SET stock = stock - @quantity WHERE id = @item_id;
-                    END
+                    UPDATE Items SET stock = stock - @quantity WHERE id = @item_id;
                 `);
         }
 
@@ -110,7 +51,7 @@ const createOrderService = async (userId, itemsPayload) => {
 
     } catch (err) {
         await transaction.rollback();
-        throw new Error(err.message); 
+        throw new Error(err.message);
     }
 };
 

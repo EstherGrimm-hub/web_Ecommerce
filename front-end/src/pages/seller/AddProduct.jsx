@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, InputNumber, Button, Select, notification, Card, Spin } from "antd";
+import { Form, Input, InputNumber, Button, Select, notification, Card, Spin, Upload } from "antd";
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from "react-router-dom"; // Thêm useParams
 import { createItemApi, updateItemApi, getCategoriesByStoreApi, getItemDetailApi } from "../../unti/api_seller";
 
@@ -11,6 +12,7 @@ const AddProduct = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false); // Loading khi tải dữ liệu cũ
+  const [fileList, setFileList] = useState([]);
 
   const store = JSON.parse(localStorage.getItem("store"));
   const storeId = store?.id;
@@ -51,19 +53,22 @@ const AddProduct = () => {
   }, [storeId, id, isEditMode, form]);
 
   // 2. Xử lý Submit (Phân biệt Tạo mới / Cập nhật)
+  // Backend stores images in ItemImages table via image field in JSON payload
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      const payload = { ...values, store_id: storeId };
+
       if (isEditMode) {
-        // Gọi API Update
-        await updateItemApi(id, values);
+        // Update existing item (includes image if provided)
+        await updateItemApi(id, payload);
         notification.success({ message: "Cập nhật thành công!" });
       } else {
-        // Gọi API Create
-        const payload = { ...values, store_id: storeId };
+        // Create new item (includes image if provided)
         await createItemApi(payload);
         notification.success({ message: "Thêm mới thành công!" });
       }
+
       navigate("/Seller/products");
     } catch (err) {
       notification.error({ message: "Có lỗi xảy ra: " + (err.response?.data?.message || err.message) });
@@ -107,8 +112,25 @@ const AddProduct = () => {
             <Input.TextArea rows={4} />
           </Form.Item>
 
-          <Form.Item label="Link Hình ảnh" name="image"> 
-             <Input />
+          <Form.Item label="Hình ảnh (URL)" name="image"> 
+            <Input placeholder="Nhập URL ảnh hoặc để trống nếu muốn tải lên từ máy" />
+          </Form.Item>
+
+          <Form.Item label="Hoặc tải ảnh từ máy (có thể chọn nhiều)">
+            <Upload
+              multiple
+              listType="picture-card"
+              fileList={fileList}
+              beforeUpload={() => false}
+              onChange={({ fileList: newList }) => setFileList(newList)}
+            >
+              {fileList.length >= 6 ? null : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Tải ảnh</div>
+                </div>
+              )}
+            </Upload>
           </Form.Item>
 
           <Form.Item>

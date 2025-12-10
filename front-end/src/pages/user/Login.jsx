@@ -22,9 +22,11 @@ const LoginPage = () => {
                 if (remember) {
                     localStorage.setItem("token", res.token);
                     localStorage.setItem("user", JSON.stringify(res.user));
+                    localStorage.setItem("store", JSON.stringify(res.hasStore || null));
                 } else {
                     sessionStorage.setItem("token", res.token);
                     sessionStorage.setItem("user", JSON.stringify(res.user));
+                    sessionStorage.setItem("store", JSON.stringify(res.hasStore || null));
                 }
                 window.dispatchEvent(new Event("storageUpdate"));
             }
@@ -36,7 +38,7 @@ const LoginPage = () => {
             });
 
             setTimeout(() => {
-                if (res.user.role === "seller") navigate("/Seller");
+                if (res.user.role === "seller") navigate("/Seller/dashboard");
                 else if (res.user.role === "admin") navigate("/Admin");
                 else navigate("/");
             }, 300);

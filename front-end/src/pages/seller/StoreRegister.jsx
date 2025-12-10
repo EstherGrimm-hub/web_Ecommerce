@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const StoreRegister = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user')); 
+    const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user')); 
     
     const [formData, setFormData] = useState({
         name: '',

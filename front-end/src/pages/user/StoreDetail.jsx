@@ -44,14 +44,14 @@ const StoreDetail = () => {
       setAllItems(itemsData);
       setDisplayItems(itemsData);
 
-      try {
-          const resCats = await axios.get(`/api/items/store/${id}/categories`);
-          if (Array.isArray(resCats)) {
-              setCategories([{ id: 'all', name: 'Tất cả' }, ...resCats]);
-          }
-      } catch (err) {
+        try {
+          // Use the categories endpoint (backend exposes /api/categories/store/:storeId)
+          const resCats = await axios.get(`/api/categories/store/${id}`);
+          const cats = Array.isArray(resCats) ? resCats : (resCats && resCats.data) ? resCats.data : [];
+          setCategories([{ id: 'all', name: 'Tất cả' }, ...cats]);
+        } catch (err) {
           console.warn("Chưa lấy được danh mục", err);
-      }
+        }
 
     } catch (error) {
       console.error("Lỗi tải dữ liệu:", error);

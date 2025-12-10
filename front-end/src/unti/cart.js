@@ -17,11 +17,11 @@ export const saveCart = (cart) => {
 // 3. Thêm sản phẩm (ĐÃ NÂNG CẤP check variant_id)
 export const addToCart = (product, quantity = 1) => {
   let cart = getCart();
-  
+  // Normalize variant id to null when comparing/storing to avoid undefined/null mismatches
+  const variantId = product.variant_id ?? null;
+
   // Kiểm tra trùng: Cùng ID sản phẩm VÀ cùng variant_id
-  const index = cart.findIndex((item) => 
-      item.id === product.id && item.variant_id === product.variant_id
-  );
+  const index = cart.findIndex((item) => item.id === product.id && item.variant_id === variantId);
 
   if (index > -1) {
     cart[index].quantity += quantity;
@@ -34,7 +34,7 @@ export const addToCart = (product, quantity = 1) => {
       store_name: product.store_name,
       stock: product.stock, 
       // Lưu thêm thông tin biến thể
-      variant_id: product.variant_id || null,
+      variant_id: variantId,
       size: product.size || null,
       color: product.color || null,
       quantity: quantity,
@@ -48,7 +48,8 @@ export const addToCart = (product, quantity = 1) => {
 // 4. Cập nhật số lượng (Cần truyền variant_id)
 export const updateCartQuantity = (productId, variantId, newQuantity) => {
   let cart = getCart();
-  const index = cart.findIndex((item) => item.id === productId && item.variant_id === variantId);
+  const vId = variantId ?? null;
+  const index = cart.findIndex((item) => item.id === productId && item.variant_id === vId);
   
   if (index > -1) {
     if (newQuantity <= 0) return removeFromCart(productId, variantId);
@@ -61,8 +62,9 @@ export const updateCartQuantity = (productId, variantId, newQuantity) => {
 // 5. Xóa sản phẩm (Cần truyền variant_id)
 export const removeFromCart = (productId, variantId) => {
   let cart = getCart();
-  // Lọc bỏ item khớp cả ID và VariantID
-  const newCart = cart.filter((item) => !(item.id === productId && item.variant_id === variantId));
+  // Normalize variant id and lọc bỏ item khớp cả ID và VariantID
+  const vId = variantId ?? null;
+  const newCart = cart.filter((item) => !(item.id === productId && item.variant_id === vId));
   saveCart(newCart);
   return newCart;
 };
